@@ -570,8 +570,8 @@
 
     chargerPioche();
 
-    // Nombre maximum de défis par session, puis message QR code
-    const MAX_DEFIS = 5;
+    // Nombre maximum de défis avant le message QR code. Infinity = illimité (mets un nombre, par exemple 5, pour remettre une limite)
+    const MAX_DEFIS = Infinity;
     const MESSAGE_FIN = "Flash le QR code pour continuer";
 
     // Code de déblocage : le QR code doit pointer vers  adresse-de-la-page/?debloquer=CODE
