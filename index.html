@@ -573,13 +573,44 @@
     // Nombre maximum de défis par session, puis message QR code
     const MAX_DEFIS = 5;
     const MESSAGE_FIN = "Flash le QR code pour continuer";
+
+    // Code de déblocage : le QR code doit pointer vers  adresse-de-la-page/?debloquer=CODE
+    // (à changer pour un code que tu es seul(e) à connaître)
+    const CODE_DEBLOCAGE = 'suite-7h4k';
+
+    // Le compteur est mémorisé sur le téléphone : recharger la page ne le remet pas à zéro
+    const CLE_COMPTEUR = 'defis-compteur-v1';
     let tires = 0;
+    try { tires = parseInt(localStorage.getItem(CLE_COMPTEUR), 10) || 0; } catch (e) {}
+    function sauverCompteur() {
+      try { localStorage.setItem(CLE_COMPTEUR, String(tires)); } catch (e) {}
+    }
 
     const card = document.getElementById('card');
     const btn = document.getElementById('actionBtn');
     let intervalId = null;
     let isRunning = false;
     let affiche = null;
+
+    function afficherFin() {
+      card.textContent = MESSAGE_FIN;
+      card.classList.remove('stopped', 'placeholder');
+      card.classList.add('limit');
+      btn.disabled = true;
+    }
+
+    // Scan du QR code de déblocage : on remet le compteur à zéro puis on nettoie l'adresse
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.get('debloquer') === CODE_DEBLOCAGE) {
+        tires = 0;
+        sauverCompteur();
+        history.replaceState(null, '', location.pathname);
+      }
+    } catch (e) {}
+
+    // Limite déjà atteinte (par exemple après un rechargement de la page) : on reste bloqué
+    if (tires >= MAX_DEFIS) afficherFin();
 
     // Pendant le défilement : simple effet visuel, le vrai défi est tiré au STOP
     function defilement() {
@@ -615,6 +646,7 @@
         // Le vrai défi est pioché dans la pioche mélangée
         card.textContent = piocherDefi();
         tires++;
+        sauverCompteur();
         btn.textContent = "Recommencer";
         btn.classList.remove('running');
         card.classList.add('stopped');
@@ -623,10 +655,7 @@
       } else {
         // Limite atteinte : le message remplace le défi et le bouton se bloque
         if (tires >= MAX_DEFIS) {
-          card.textContent = MESSAGE_FIN;
-          card.classList.remove('stopped', 'placeholder');
-          card.classList.add('limit');
-          btn.disabled = true;
+          afficherFin();
           return;
         }
 
